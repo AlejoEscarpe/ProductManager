@@ -1,22 +1,35 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using ProductManager.Core.Interfaces;
 using ProductManager.Infrastructure.Data;
 using ProductManager.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Agregar soporte para Controladores
+// 1. Controladores y Swagger básico
 builder.Services.AddControllers();
-
-// 2. Configurar Swagger/OpenAPI para probar endpoints
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 3. Registrar DbContext con la cadena de conexión a SQL Server
+// 2. DbContext y Servicios
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    options.UseSqlServer(connectionString);
+    // Evitar que la advertencia PendingModelChanges lance una excepción;
+    // la registramos en lugar de convertirla en error en tiempo de ejecución.
+    options.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning));
+    // En desarrollo, habilitar logging de EF Core para ver SQL y datos sensibles (solo dev)
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging();
+        options.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information);
+    }
+});
 
-// 4. Configurar CORS para permitir peticiones desde Angular
+builder.Services.AddScoped<IProductService, ProductService>();
+
+// 3. CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
@@ -27,25 +40,24 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddScoped<IProductService, ProductService>();
-
 var app = builder.Build();
 
-// 5. Configurar el pipeline HTTP en desarrollo
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// 4. Swagger UI
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-
-// 6. Activar la política CORS
 app.UseCors("AllowAngular");
-
 app.UseAuthorization();
-
-// 7. Mapear los controladores de la API
 app.MapControllers();
+
+
+// Aplicar migraciones automáticas al iniciar la aplicación
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    // Aplicar migraciones pendientes para garantizar que la BD tenga las tablas esperadas
+    dbContext.Database.Migrate();
+}
 
 app.Run();
