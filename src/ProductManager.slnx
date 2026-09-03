@@ -1,4 +1,8 @@
 <Solution>
+  <Project Path="ProductManager-UI/ProductManager-UI.esproj">
+    <Build />
+    <Deploy />
+  </Project>
   <Project Path="ProductManager.API/ProductManager.API.csproj" />
   <Project Path="ProductManager.Core/ProductManager.Core.csproj" />
   <Project Path="ProductManager.Infrastructure/ProductManager.Infrastructure.csproj" />
