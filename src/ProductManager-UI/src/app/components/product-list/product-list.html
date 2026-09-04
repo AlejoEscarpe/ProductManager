@@ -1,0 +1,58 @@
+<div class="container" style="padding: 20px;">
+  <h2>Gestión de Productos</h2>
+
+  <!-- Formulario de creación -->
+  <div style="margin-bottom: 30px; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+    <h3>Nuevo Producto</h3>
+    <form (submit)="$event.preventDefault()">
+      <div style="margin-bottom: 10px;">
+        <label>Nombre:</label><br>
+        <input type="text" [(ngModel)]="newProduct.name" name="name" required style="width: 100%; padding: 8px;">
+      </div>
+      <div style="margin-bottom: 10px;">
+        <label>Precio:</label><br>
+        <input type="number" [(ngModel)]="newProduct.price" name="price" required style="width: 100%; padding: 8px;">
+      </div>
+      <div style="margin-bottom: 10px;">
+        <label>Stock:</label><br>
+        <input type="number" [(ngModel)]="newProduct.stock" name="stock" required style="width: 100%; padding: 8px;">
+      </div>
+      <button type="button" (click)="onSubmit()" style="padding: 8px 16px; background-color: #28a745; color: white; border: none; cursor: pointer;">
+        Guardar Producto
+      </button>
+    </form>
+  </div>
+
+  <!-- Tabla de productos -->
+  <h3>Lista de Productos</h3>
+  <div *ngIf="isLoading">Cargando productos...</div>
+  <div *ngIf="errorMessage" style="color: red;">{{ errorMessage }}</div>
+
+  <table *ngIf="!isLoading" border="1" cellpadding="8" cellspacing="0" style="width: 100%; text-align: left;">
+    <thead>
+      <tr style="background-color: #f2f2f2;">
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Precio</th>
+        <th>Stock</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let product of products">
+        <td>{{ product.id }}</td>
+        <td>{{ product.name }}</td>
+        <td>{{ product.price | currency }}</td>
+        <td>{{ product.stock }}</td>
+        <td>
+          <button type="button" (click)="deleteProduct(product.id)" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer;">
+            Eliminar
+          </button>
+        </td>
+      </tr>
+      <tr *ngIf="products.length === 0">
+        <td colspan="5" style="text-align: center;">No hay productos registrados.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

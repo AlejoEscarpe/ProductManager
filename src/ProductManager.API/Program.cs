@@ -52,12 +52,11 @@ app.UseAuthorization();
 app.MapControllers();
 
 
-// Aplicar migraciones automáticas al iniciar la aplicación
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    // Aplicar migraciones pendientes para garantizar que la BD tenga las tablas esperadas
-    dbContext.Database.Migrate();
+    dbContext.Database.EnsureDeleted(); // Elimina la BD previa desactualizada
+    dbContext.Database.Migrate();       // Crea la BD desde cero con el esquema correcto
 }
 
 app.Run();
